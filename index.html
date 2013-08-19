@@ -1,0 +1,101 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <title>Chat with sockt.io and node.js</title>
+    <script src="http://code.jquery.com/jquery-latest.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+
+<style>
+    #contentWrap {
+        display: none;
+    }
+    #chatWrap {
+        float: left;
+    }
+    #users {
+        width: 200px;
+        border: 1px solid #000000;
+    }
+    #usersBox {
+        float: left;
+        margin-left: 20px;
+    }
+    #usersBox h3 {
+        margin: 0;
+    }
+</style>
+    <div id="nickWrap">
+        <p>Enter a username</p>
+        <p id="nickError"></p>
+        <form id="setNick">
+            <input type="text" size="35" id="nickname">
+            <input type="submit">
+        </form>
+    </div>
+
+    <div id="contentWrap">
+        <div id="chatWrap">
+            <div style="float: left">
+                <form id="send-message">
+                    <input size="35" id="message" type="text">
+                    <input type="submit">
+                </form>
+            </div>
+            <div style="clear: both;"></div>
+            <div id="chat"></div>
+        </div>
+        <div id="usersBox">
+            <h3>Users</h3>
+            <div id="users"></div>
+        </div>
+    </div>
+
+
+<script>
+
+        var socket = io.connect();
+        var nickForm = $('#setNick');
+        var nickBox = $('#nickname');
+        var nickError = $('#nickError');
+        var meassgeForm = $('#send-message');
+        var messageBox = $('#message');
+        var chat = $('#chat');
+
+        nickForm.on('submit', function(e) {
+            e.preventDefault();
+            socket.emit('new user', nickBox.val(), function(data) {
+                if(data) {
+                    $('#nickWrap').hide();
+                    $('#contentWrap').show();
+                } else {
+                    nickError.html('That username already take! try again.');
+                }
+
+            });
+            nickBox.val('');
+        });
+        socket.on('usernames', function(data) {
+            var html = '';
+            for(var i=0;i<data.length;i++) {
+                html += data[i] + '<br />';
+            }
+            $('#users').html(html);
+        });
+
+        meassgeForm.on('submit', function(e) {
+            e.preventDefault();
+            socket.emit('send message', messageBox.val());
+            messageBox.val('');
+        });
+
+        socket.on('new message', function(data) {
+            chat.append('<b>'+ data.nick + ':</b>' + data.msg + '<br />');
+        });
+
+</script>
+
+</body>
+</html>
